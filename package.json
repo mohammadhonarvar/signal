@@ -1,0 +1,36 @@
+{
+  "name": "signal",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:mohammadhonarvar/signal.git",
+  "author": "Mohammad Honarvar <honarvar.info@gmail.com>",
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "b": "yarn build",
+    "w": "yarn watch",
+    "c": "yarn clean",
+    "clean": "tsc --build --clean",
+    "lint": "run-s lint:*",
+    "lint:ts": "eslint . --config .eslintrc.json --ext .ts",
+    "build": "yarn build:ts",
+    "build:ts": "tsc --build",
+    "watch:ts": "yarn build:ts --watch --preserveWatchOutput",
+    "serve": "wds",
+    "watch": "run-p watch:* serve"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.9.0",
+    "@typescript-eslint/parser": "^6.9.0",
+    "@web/dev-server": "^0.3.6",
+    "eslint": "^8.52.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-import-resolver-typescript": "^3.6.1",
+    "eslint-plugin-import": "^2.29.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@alwatr/logger": "1.1.2"
+  }
+}
