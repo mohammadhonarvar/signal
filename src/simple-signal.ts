@@ -1,10 +1,10 @@
-import { createLogger } from "../node_modules/@alwatr/logger/logger.js";
+import {createLogger} from '@alwatr/logger/logger.js';
 
-import { _actionTarget, _signalStorage, debounceTimeout } from "./common.js";
+import {_actionTarget, _signalStorage, debounceTimeout} from './common.js';
 
-import type { DispatchOptions, SignalObject } from "./type.js";
+import type {DispatchOptions, SignalObject} from './type.js';
 
-const logger = createLogger("simple-signal");
+const logger = createLogger('simple-signal');
 
 /**
  * Listener `id`
@@ -29,8 +29,8 @@ const _getSimpleSignalObject = <T>(
 
 
 export function dispatch<T>(
-  signalId: T,
-  options: Partial<DispatchOptions> = {}): void {
+    signalId: T,
+    options: Partial<DispatchOptions> = {}): void {
   options.debounce ??= 'NextCycle';
 
   logger.logMethodArgs?.('dispatch', {signalId, options});
@@ -40,12 +40,12 @@ export function dispatch<T>(
 
   const dispatchEvent = (): void => {
     _actionTarget.dispatchEvent(
-      new CustomEvent(signalId as string)
+        new CustomEvent(signalId as string),
     );
-  }
-  
+  };
+
   if (options.debounce === 'No') {
-    dispatchEvent()
+    dispatchEvent();
     return;
   }
 
@@ -68,16 +68,16 @@ export function dispatch<T>(
 }
 
 export function onDispatch<T>(
-  signalId: T,
-  callback: () => void | Promise<void>, 
-  options: { preserved?: boolean, runAsLatest?: boolean; once?: boolean } = {}): number {
+    signalId: T,
+    callback: () => void | Promise<void>,
+    options: { preserved?: boolean, runAsLatest?: boolean; once?: boolean } = {}): number {
   options.preserved ??= true;
   logger.logMethodArgs?.('onDispatch', {signalId, callback, options});
 
   const signal = _getSimpleSignalObject(signalId);
   if (signal.disabled) return _lastListenerAutoId;
 
-  const listenerCallback = ():  void | Promise<void> => {
+  const listenerCallback = (): void | Promise<void> => {
     try {
       callback();
     }
@@ -102,11 +102,12 @@ export function onDispatch<T>(
         setTimeout(() => {
           listenerCallback();
         }, 0);
-      } else {
+      }
+      else {
         listenerCallback();
       }
     }) as EventListener,
-    { once: options.once }
+    {once: options.once},
   );
 
   if (options.preserved) {

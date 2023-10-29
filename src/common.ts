@@ -1,10 +1,10 @@
-import { globalAlwatr } from "../node_modules/@alwatr/logger/logger.js";
+import {globalAlwatr} from '@alwatr/logger/logger.js';
 
-import type { SignalStorage } from "./type.js";
+import type {SignalStorage} from './type.js';
 
 globalAlwatr.registeredList.push({
-  name: "signal",
-  version: "1.0.0",
+  name: 'signal',
+  version: '1.0.0',
 });
 
 export const debounceTimeout = 5;
@@ -15,9 +15,9 @@ export const debounceTimeout = 5;
 export const _signalStorage: SignalStorage = {};
 
 export const _actionTarget: EventTarget | Element =
-  "eventTarget" in window ? new EventTarget() : document.createElement("span");
+  'eventTarget' in window ? new EventTarget() : document.createElement('span');
 
-export function removeSignal<T extends Record<string, any>>(signalId: keyof T, prune = false): void {
+export function removeSignal<T extends Record<string, unknown>>(signalId: keyof T, prune = false): void {
   const signal = _signalStorage[signalId as string];
   if (signal == null) return;
 

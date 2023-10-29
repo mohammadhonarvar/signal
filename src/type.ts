@@ -28,6 +28,11 @@ export interface DispatchOptions {
    * @default `AnimationFrame`
    */
   debounce: DebounceType;
+
+  /**
+   * Caller scope name
+   */
+  scopeName?: string;
 }
 
 /**
@@ -88,13 +93,13 @@ export interface ContextSignalObject<T> extends SignalObject {
   /**
    * Last dispatched detail.
    */
-  detail?: T;
+  detail: T | undefined;
 }
 
 /**
  * Signal stack storage.
  */
-export type SignalStorage = Record<string, ContextSignalObject<Stringifyable> | undefined>;
+export type SignalStorage = Record<string, SignalObject | ContextSignalObject<Stringifyable> | undefined>;
 
 /**
  * Listener spec.

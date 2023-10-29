@@ -1,17 +1,17 @@
-import { createLogger } from "../node_modules/@alwatr/logger/logger.js";
+import {createLogger} from '@alwatr/logger/logger.js';
 
-import { _actionTarget, _signalStorage, debounceTimeout } from "./common.js";
+import {_actionTarget, _signalStorage, debounceTimeout} from './common.js';
 
-import type { ContextSignalDispatchOptions, ContextSignalObject } from "./type.js";
+import type {ContextSignalDispatchOptions, ContextSignalObject} from './type.js';
 
-const logger = createLogger("context-signal");
+const logger = createLogger('context-signal');
 
 /**
  * Listener `id`
  */
 let _lastContextSignalListenerAutoId = 0;
 
-const _getContextSignalObject = <T extends Record<string, any>>(
+const _getContextSignalObject = <T>(
   signalId: keyof T,
 ): ContextSignalObject<T> => {
   let signal = _signalStorage[signalId] as ContextSignalObject<T> | undefined;
@@ -20,6 +20,7 @@ const _getContextSignalObject = <T extends Record<string, any>>(
       id: signalId as string,
       disabled: false,
       debounced: false,
+      detail: undefined,
       listenerList: [],
     };
   }
@@ -35,16 +36,16 @@ const _getContextSignalObject = <T extends Record<string, any>>(
  * setContextSignalValue<ContentType>('content-change', { key: 5 });
  * ```
  */
-export const setContextSignalValue = <T extends Record<string, any>>(
+export const setContextSignalValue = <T>(
   signalId: keyof T,
   value: T[typeof signalId],
-  replaceAll = false
+  replaceAll = false,
 ): ContextSignalObject<T> => {
-  logger.logMethodArgs?.('setContextSignalValue', { signalId, value, replaceAll });
+  logger.logMethodArgs?.('setContextSignalValue', {signalId, value, replaceAll});
 
   const signal = _getContextSignalObject(signalId);
   if (signal.detail === undefined || replaceAll) {
-    signal.detail = value;
+    signal.detail = value as unknown as T;
     return signal;
   }
 
@@ -53,11 +54,11 @@ export const setContextSignalValue = <T extends Record<string, any>>(
     !Array.isArray(signal.detail) &&
     typeof value === 'object'
   ) {
-    signal.detail = { ...signal.detail, ...value };
+    signal.detail = {...signal.detail, ...value};
     return signal;
   }
 
-  signal.detail = value;
+  signal.detail = value as unknown as T;
   return signal;
 };
 
@@ -70,32 +71,33 @@ export const setContextSignalValue = <T extends Record<string, any>>(
  * const currentContent = getContextSignalValue<ContentType>('content-change');
  * ```
  */
-export const getContextSignalValue = <T extends Record<string, any>>(signalId: string): T | undefined => {
+export const getContextSignalValue = <T>(signalId: keyof T): T | undefined => {
   return _getContextSignalObject<T>(signalId).detail;
 };
 
 
-export function contextDispatch<T extends Record<string, any>>(
-  signalId: keyof T,
-  value: T[typeof signalId],
-  options: Partial<ContextSignalDispatchOptions> = {}): void {
+export function contextDispatch<T>(
+    signalId: keyof T,
+    value: T[typeof signalId],
+    options: Partial<ContextSignalDispatchOptions> = {}): void {
   options.debounce ??= 'NextCycle';
+  options.scopeName ??= 'unknown';
 
   logger.logMethodArgs?.('contextDispatch', {signalId, value, options});
-  
+
   const signal = setContextSignalValue(signalId, value, options.replaceAll);
   if (signal.disabled) return;
 
   const dispatchEvent = (): void => {
     _actionTarget.dispatchEvent(
-      new CustomEvent(signalId as string, {
-        detail: value,
-      })
+        new CustomEvent(signalId as string, {
+          detail: value,
+        }),
     );
-  }
-  
+  };
+
   if (options.debounce === 'No') {
-    dispatchEvent()
+    dispatchEvent();
     return;
   }
 
@@ -117,17 +119,17 @@ export function contextDispatch<T extends Record<string, any>>(
     : setTimeout(dispatchEvent, debounceTimeout);
 }
 
-export function onContextDispatch<T extends Record<string, any>>(
-  signalId: keyof T,
-  callback: (detail: T[typeof signalId]) => void | Promise<void>, 
-  options: { preserved?: boolean, runAsLatest?: boolean; once?: boolean } = {}): number {
+export function onContextDispatch<T>(
+    signalId: keyof T,
+    callback: (detail: T[typeof signalId]) => void | Promise<void>,
+    options: { preserved?: boolean, runAsLatest?: boolean; once?: boolean } = {}): number {
   options.preserved ??= true;
   logger.logMethodArgs?.('onContextDispatch', {signalId, callback, options});
 
   const signal = _getContextSignalObject(signalId);
   if (signal.disabled) return _lastContextSignalListenerAutoId;
 
-  const listenerCallback = (event: CustomEvent<T[typeof signalId]>):  void | Promise<void> => {
+  const listenerCallback = (event: CustomEvent<T[typeof signalId]>): void | Promise<void> => {
     try {
       callback(event.detail);
     }
@@ -152,11 +154,12 @@ export function onContextDispatch<T extends Record<string, any>>(
         setTimeout(() => {
           listenerCallback(event);
         }, 0);
-      } else {
+      }
+      else {
         listenerCallback(event);
       }
     }) as EventListener,
-    { once: options.once }
+    {once: options.once},
   );
 
   if (options.preserved) {
@@ -166,7 +169,7 @@ export function onContextDispatch<T extends Record<string, any>>(
   return _lastContextSignalListenerAutoId;
 }
 
-export function removeOnContextDispatch<T extends Record<string, any>>(signalId: keyof T, listenerId: number): void {
+export function removeOnContextDispatch<T>(signalId: keyof T, listenerId: number): void {
   const signal = _signalStorage[signalId as string];
   if (signal == null) return;
 
@@ -184,7 +187,7 @@ export function removeOnContextDispatch<T extends Record<string, any>>(signalId:
  * @function firstContextDispatch
  * @returns {Promise<void>} promise of void
  */
-export function firstContextDispatch<T extends Record<string, any>>(signalId: keyof T, conditionFn?: (detail: ContextSignalObject<T>['detail']) => boolean): Promise<void> {
+export function firstContextDispatch<T>(signalId: keyof T, conditionFn?: (detail: ContextSignalObject<T>['detail']) => boolean): Promise<void> {
   let canRemoveOnDispatch = false;
 
   return new Promise((resolve) => {
@@ -195,7 +198,8 @@ export function firstContextDispatch<T extends Record<string, any>>(signalId: ke
           canRemoveOnDispatch = true;
           resolve();
         }
-      } else {
+      }
+      else {
         resolve();
       }
 
