@@ -20,8 +20,8 @@ Desktop.ini
 *.js
 !*.config.js
 !**/res/*.js
+!**/build/*.js
 dist
-build
 
 # Dependencies
 node_modules
