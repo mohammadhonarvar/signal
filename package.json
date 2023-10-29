@@ -1,6 +1,6 @@
 {
   "name": "signal",
-  "version": "1.0.0",
+  "version": "1.0.0-rc.0",
   "main": "index.js",
   "repository": "git@github.com:mohammadhonarvar/signal.git",
   "author": "Mohammad Honarvar <honarvar.info@gmail.com>",
@@ -12,7 +12,7 @@
     "c": "yarn clean",
     "clean": "tsc --build --clean",
     "lint": "run-s lint:*",
-    "lint:ts": "eslint . --config .eslintrc.json --ext .ts",
+    "lint:ts": "eslint . --config .eslintrc.json --ext .ts --fix",
     "build": "yarn build:ts",
     "build:ts": "tsc --build",
     "watch:ts": "yarn build:ts --watch --preserveWatchOutput",
