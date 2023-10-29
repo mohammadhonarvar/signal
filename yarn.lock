@@ -1136,6 +1136,13 @@ es-to-primitive@^1.2.1:
     is-date-object "^1.0.1"
     is-symbol "^1.0.2"
 
+esbuild-plugin-d-ts-path-alias@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/esbuild-plugin-d-ts-path-alias/-/esbuild-plugin-d-ts-path-alias-4.2.0.tgz#113d51bbfeb768ea2cdf5e9e90a6e0f407249d9f"
+  integrity sha512-8yUk1kWGpH/NJKxVLkZrdBsmQ/k7SsffaH9AJuDLGEMF4lTqCWba92QmmNCFAxhQNuVLWTUYoUm/8vETEjtQJA==
+  dependencies:
+    typescript-transform-paths "3.4.6"
+
 esbuild@^0.19.5:
   version "0.19.5"
   resolved "https://registry.yarnpkg.com/esbuild/-/esbuild-0.19.5.tgz#53a0e19dfbf61ba6c827d51a80813cf071239a8c"
@@ -2783,6 +2790,13 @@ typed-array-length@^1.0.4:
     call-bind "^1.0.2"
     for-each "^0.3.3"
     is-typed-array "^1.1.9"
+
+typescript-transform-paths@3.4.6:
+  version "3.4.6"
+  resolved "https://registry.yarnpkg.com/typescript-transform-paths/-/typescript-transform-paths-3.4.6.tgz#28e6b24eb17a34116484a4b7af7323b8bb756db6"
+  integrity sha512-qdgpCk9oRHkIBhznxaHAapCFapJt5e4FbFik7Y4qdqtp6VyC3smAIPoDEIkjZ2eiF7x5+QxUPYNwJAtw0thsTw==
+  dependencies:
+    minimatch "^3.0.4"
 
 typescript@^5.2.2:
   version "5.2.2"
