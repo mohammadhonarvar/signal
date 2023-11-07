@@ -7,7 +7,7 @@ import type { ContextSignalDispatchOptions, ContextSignalObject } from './type.j
  * setContextSignalValue<ContentType>('content-change', { key: 5 });
  * ```
  */
-export declare const setContextSignalValue: <T>(signalId: keyof T, value: T[keyof T], replaceAll?: boolean) => ContextSignalObject<T>;
+export declare const setContextSignalValue: <T>(signalId: keyof T, value: Partial<T[keyof T]>, replaceAll?: boolean) => ContextSignalObject<T>;
 /**
  * Get current signal detail/value.
  *
@@ -19,6 +19,7 @@ export declare const setContextSignalValue: <T>(signalId: keyof T, value: T[keyo
  */
 export declare const getContextSignalValue: <T>(signalId: keyof T) => T | undefined;
 export declare function contextDispatch<T>(signalId: keyof T, value: T[typeof signalId], options?: Partial<ContextSignalDispatchOptions>): void;
+export declare function contextEditionDispatch<T>(signalId: keyof T, value: Partial<T[typeof signalId]>, options?: Partial<ContextSignalDispatchOptions>): void;
 export declare function onContextDispatch<T>(signalId: keyof T, callback: (detail: T[typeof signalId]) => void | Promise<void>, options?: {
     preserved?: boolean;
     runAsLatest?: boolean;
