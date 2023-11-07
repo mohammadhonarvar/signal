@@ -22,6 +22,7 @@ const _getContextSignalObject = <T>(
       debounced: false,
       detail: undefined,
       listenerList: [],
+      firstDispatchedDone: false,
     };
   }
 
@@ -38,7 +39,7 @@ const _getContextSignalObject = <T>(
  */
 export const setContextSignalValue = <T>(
   signalId: keyof T,
-  value: T[typeof signalId],
+  value: Partial<T[typeof signalId]>,
   replaceAll = false,
 ): ContextSignalObject<T> => {
   logger.logMethodArgs?.('setContextSignalValue', {signalId, value, replaceAll});
@@ -82,10 +83,13 @@ export function contextDispatch<T>(
     options: Partial<ContextSignalDispatchOptions> = {}): void {
   options.debounce ??= 'NextCycle';
   options.scopeName ??= 'unknown';
+  options.replaceAll ??= false;
 
   logger.logMethodArgs?.('contextDispatch', {signalId, value, options});
 
   const signal = setContextSignalValue(signalId, value, options.replaceAll);
+  signal.firstDispatchedDone = true;
+
   if (signal.disabled) return;
 
   const dispatchEvent = (): void => {
@@ -118,6 +122,22 @@ export function contextDispatch<T>(
     ? requestAnimationFrame(dispatchEvent)
     : setTimeout(dispatchEvent, debounceTimeout);
 }
+
+export function contextEditionDispatch<T>(
+    signalId: keyof T,
+    value: Partial<T[typeof signalId]>,
+    options: Partial<ContextSignalDispatchOptions> = {}): void {
+  logger.logMethodArgs?.('contextEditionDispatch', {signalId, value, options});
+
+  const signal = _getContextSignalObject(signalId);
+  if (!signal.firstDispatchedDone) {
+    console.warn(`Use \`contextDispatch\` for ${signalId as string} , then this function can run`);
+    return;
+  }
+
+  contextDispatch(signalId, value as T[typeof signalId], options);
+}
+
 
 export function onContextDispatch<T>(
     signalId: keyof T,

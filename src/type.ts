@@ -84,6 +84,11 @@ export interface SignalObject {
    * Signal listeners list.
    */
   listenerList: ListenerObject[];
+
+  /**
+   * If `true`, it means a complete value has been set already
+   */
+  firstDispatchedDone: boolean;
 }
 
 /**
