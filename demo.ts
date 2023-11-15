@@ -4,18 +4,21 @@ import {dispatch, onDispatch} from './dist/simple-signal.js';
 declare global {
   interface ContextSignalList {
     mhf: { data: string }
+    test: number;
   }
 
   type SimpleSignalList = 'x' | 'y';
 }
 
-const _contextDispatch = contextDispatch<ContextSignalList>;
+const signalContextDispatch = contextDispatch<ContextSignalList>();
+const signalOnContextDispatch = onContextDispatch<ContextSignalList>();
+const signalSetContextValue = setContextSignalValue<ContextSignalList>();
 
-_contextDispatch('mhf', {data: 'test'});
-setContextSignalValue<ContextSignalList>('mhf', {data: 'test2'});
+signalContextDispatch('mhf', {data: 'test'});
+signalSetContextValue('mhf', {});
 
 setTimeout(() => {
-  onContextDispatch<ContextSignalList>('mhf', () => {console.log('MHF: value => ');}, {preserved: false});
+  signalOnContextDispatch('mhf', (data) => {console.log('MHF: value => ', data);}, {preserved: false});
 }, 5000);
 
 const _dispatch = dispatch<SimpleSignalList>;

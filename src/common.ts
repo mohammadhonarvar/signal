@@ -17,8 +17,8 @@ export const _signalStorage: SignalStorage = {};
 export const _actionTarget: EventTarget | Element =
   'eventTarget' in window ? new EventTarget() : document.createElement('span');
 
-export function removeSignal<T extends Record<string, unknown>>(signalId: keyof T, prune = false): void {
-  const signal = _signalStorage[signalId as string];
+export function removeSignal(signalId: keyof typeof _signalStorage, prune = false): void {
+  const signal = _signalStorage[signalId];
   if (signal == null) return;
 
   for (const listener of signal.listenerList) {
@@ -29,7 +29,7 @@ export function removeSignal<T extends Record<string, unknown>>(signalId: keyof 
   }
 
   if (prune) {
-    delete _signalStorage[signalId as string];
+    delete _signalStorage[signalId];
     return;
   }
 
@@ -45,6 +45,6 @@ export function resetSignalObject(): void {
   const signalIds = Object.keys(_signalStorage);
 
   for (const signalId of signalIds) {
-    removeSignal((signalId as string), true);
+    removeSignal((signalId), true);
   }
 }

@@ -21,6 +21,7 @@ const _getSimpleSignalObject = <T>(
       disabled: false,
       debounced: false,
       listenerList: [],
+      firstDispatchedDone: false,
     };
   }
 
@@ -36,6 +37,8 @@ export function dispatch<T>(
   logger.logMethodArgs?.('dispatch', {signalId, options});
 
   const signal = _getSimpleSignalObject(signalId);
+  signal.firstDispatchedDone = true;
+
   if (signal.disabled) return;
 
   const dispatchEvent = (): void => {

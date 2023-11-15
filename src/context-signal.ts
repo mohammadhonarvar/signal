@@ -11,10 +11,10 @@ const logger = createLogger('context-signal');
  */
 let _lastContextSignalListenerAutoId = 0;
 
-const _getContextSignalObject = <T>(
-  signalId: keyof T,
-): ContextSignalObject<T> => {
-  let signal = _signalStorage[signalId] as ContextSignalObject<T> | undefined;
+const _getContextSignalObject = <T>() => <K extends keyof T = keyof T>(
+  signalId: K,
+): ContextSignalObject<T[K]> => {
+  let signal = _signalStorage[signalId] as ContextSignalObject<T[K]> | undefined;
   if (signal == null) {
     signal = _signalStorage[signalId as string] = {
       id: signalId as string,
@@ -37,16 +37,16 @@ const _getContextSignalObject = <T>(
  * setContextSignalValue<ContentType>('content-change', { key: 5 });
  * ```
  */
-export const setContextSignalValue = <T>(
-  signalId: keyof T,
-  value: Partial<T[typeof signalId]>,
+export const setContextSignalValue = <T extends object>() => <K extends keyof T = keyof T>(
+  signalId: K,
+  value: Partial<T[K]>,
   replaceAll = false,
-): ContextSignalObject<T> => {
+): ContextSignalObject<T[K]> => {
   logger.logMethodArgs?.('setContextSignalValue', {signalId, value, replaceAll});
 
-  const signal = _getContextSignalObject(signalId);
+  const signal = _getContextSignalObject<T>()(signalId);
   if (signal.detail === undefined || replaceAll) {
-    signal.detail = value as unknown as T;
+    signal.detail = value as T[K];
     return signal;
   }
 
@@ -59,7 +59,7 @@ export const setContextSignalValue = <T>(
     return signal;
   }
 
-  signal.detail = value as unknown as T;
+  signal.detail = value as T[K];
   return signal;
 };
 
@@ -72,102 +72,107 @@ export const setContextSignalValue = <T>(
  * const currentContent = getContextSignalValue<ContentType>('content-change');
  * ```
  */
-export const getContextSignalValue = <T>(signalId: keyof T): T | undefined => {
-  return _getContextSignalObject<T>(signalId).detail;
+export const getContextSignalValue = <T extends object>() => <K extends keyof T = keyof T>(signalId: K): T[K] | undefined => {
+  return _getContextSignalObject<T>()(signalId).detail;
 };
 
 
-export function contextDispatch<T>(
-    signalId: keyof T,
-    value: T[typeof signalId],
-    options: Partial<ContextSignalDispatchOptions> = {}): void {
-  options.debounce ??= 'NextCycle';
-  options.scopeName ??= 'unknown';
-  options.replaceAll ??= false;
+export function contextDispatch<T extends object>() {
+  return <K extends keyof T = keyof T>(
+    signalId: K,
+    value: T[K],
+    options: Partial<ContextSignalDispatchOptions> = {}): void => {
+    options.debounce ??= 'NextCycle';
+    options.scopeName ??= 'unknown';
+    options.replaceAll ??= false;
 
-  logger.logMethodArgs?.('contextDispatch', {signalId, value, options});
+    logger.logMethodArgs?.('contextDispatch', {signalId, value, options});
 
-  const signal = setContextSignalValue(signalId, value, options.replaceAll);
-  signal.firstDispatchedDone = true;
+    const signal = setContextSignalValue<T>()(signalId, value, options.replaceAll);
+    signal.firstDispatchedDone = true;
 
-  if (signal.disabled) return;
+    if (signal.disabled) return;
 
-  const dispatchEvent = (): void => {
-    _actionTarget.dispatchEvent(
-        new CustomEvent(signalId as string, {
-          detail: value,
-        }),
-    );
-  };
+    const dispatchEvent = (): void => {
+      _actionTarget.dispatchEvent(
+          new CustomEvent(signalId as string, {
+            detail: value,
+          }),
+      );
+    };
 
-  if (options.debounce === 'No') {
-    dispatchEvent();
-    return;
-  }
+    if (options.debounce === 'No') {
+      dispatchEvent();
+      return;
+    }
 
-  // else
-  if (options.debounce === 'NextCycle') {
-    setTimeout(dispatchEvent, 0);
-    return;
-  }
+    // else
+    if (options.debounce === 'NextCycle') {
+      setTimeout(dispatchEvent, 0);
+      return;
+    }
 
-  // else
-  if (signal.debounced === true) {
-    return; // last dispatch in progress.
-  }
+    // else
+    if (signal.debounced === true) {
+      return; // last dispatch in progress.
+    }
 
-  // else
-  signal.debounced = true;
+    // else
+    signal.debounced = true;
   options.debounce === 'AnimationFrame'
     ? requestAnimationFrame(dispatchEvent)
     : setTimeout(dispatchEvent, debounceTimeout);
-}
-
-export function contextEditionDispatch<T>(
-    signalId: keyof T,
-    value: Partial<T[typeof signalId]>,
-    options: Partial<ContextSignalDispatchOptions> = {}): void {
-  logger.logMethodArgs?.('contextEditionDispatch', {signalId, value, options});
-
-  const signal = _getContextSignalObject(signalId);
-  if (!signal.firstDispatchedDone) {
-    console.warn(`Use \`contextDispatch\` for ${signalId as string} , then this function can run`);
-    return;
-  }
-
-  contextDispatch(signalId, value as T[typeof signalId], options);
-}
-
-
-export function onContextDispatch<T>(
-    signalId: keyof T,
-    callback: (detail: T[typeof signalId]) => void | Promise<void>,
-    options: { preserved?: boolean, runAsLatest?: boolean; once?: boolean } = {}): number {
-  options.preserved ??= true;
-  logger.logMethodArgs?.('onContextDispatch', {signalId, callback, options});
-
-  const signal = _getContextSignalObject(signalId);
-  if (signal.disabled) return _lastContextSignalListenerAutoId;
-
-  const listenerCallback = (event: CustomEvent<T[typeof signalId]>): void | Promise<void> => {
-    try {
-      callback(event.detail);
-    }
-    catch (err) {
-      logger.error('onContextDispatch', 'call_signal_callback_failed', err, {
-        signalId: signal.id,
-      });
-    }
   };
+}
 
-  signal.listenerList.push({
-    id: ++_lastContextSignalListenerAutoId,
-    signalId: signal.id,
-    once: options.once ?? false,
-    callback: listenerCallback,
-  });
+export function contextEditionDispatch<T extends object>() {
+  return <K extends keyof T = keyof T>(
+    signalId: K,
+    value: Partial<T[K]>,
+    options: Partial<ContextSignalDispatchOptions> = {}): void => {
+    logger.logMethodArgs?.('contextEditionDispatch', {signalId, value, options});
 
-  _actionTarget.addEventListener(
+    const signal = _getContextSignalObject<T>()(signalId);
+    if (!signal.firstDispatchedDone) {
+      console.warn(`Use \`contextDispatch\` for ${signalId as string} , then this function can run`);
+      return;
+    }
+
+    contextDispatch<T>()(signalId, value as T[K], options);
+  };
+}
+
+
+export function onContextDispatch<T extends object>() {
+  return <K extends keyof T = keyof T>(
+    signalId: K,
+    callback: (detail: T[K]) => void | Promise<void>,
+    options: { preserved?: boolean, runAsLatest?: boolean; once?: boolean } = {}): number => {
+    options.preserved ??= true;
+    logger.logMethodArgs?.('onContextDispatch', {signalId, callback, options});
+
+    const signal = _getContextSignalObject<T>()(signalId);
+    if (signal.disabled) return _lastContextSignalListenerAutoId;
+
+    const listenerCallback = (event: CustomEvent<T[typeof signalId]>): void | Promise<void> => {
+      try {
+        callback(event.detail);
+      }
+      catch (err) {
+        logger.error('onContextDispatch', 'call_signal_callback_failed', err, {
+          signalId: signal.id,
+        });
+      }
+    };
+
+    signal.listenerList.push({
+      id: ++_lastContextSignalListenerAutoId,
+      signalId: signal.id,
+      once: options.once ?? false,
+      callback: listenerCallback,
+    });
+
+    _actionTarget.addEventListener(
     signalId as string,
     ((event: CustomEvent) => {
       if (options.runAsLatest) {
@@ -180,26 +185,29 @@ export function onContextDispatch<T>(
       }
     }) as EventListener,
     {once: options.once},
-  );
+    );
 
-  if (options.preserved) {
-    setTimeout(callback, 0, signal.detail);
-  }
+    if (options.preserved) {
+      setTimeout(callback, 0, signal.detail);
+    }
 
-  return _lastContextSignalListenerAutoId;
+    return _lastContextSignalListenerAutoId;
+  };
 }
 
-export function removeOnContextDispatch<T>(signalId: keyof T, listenerId: number): void {
-  const signal = _signalStorage[signalId as string];
-  if (signal == null) return;
+export function removeOnContextDispatch<T extends object>() {
+  return <K extends keyof T = keyof T>(signalId: K, listenerId: number): void => {
+    const signal = _signalStorage[signalId as string];
+    if (signal == null) return;
 
-  const index = signal.listenerList.findIndex((item) => item.id === listenerId);
-  if (index > -1) {
-    _actionTarget.removeEventListener(
-      signalId as string,
-      signal.listenerList[index].callback as EventListenerOrEventListenerObject,
-    );
-  }
+    const index = signal.listenerList.findIndex((item) => item.id === listenerId);
+    if (index > -1) {
+      _actionTarget.removeEventListener(
+        signalId as string,
+        signal.listenerList[index].callback as EventListenerOrEventListenerObject,
+      );
+    }
+  };
 }
 
 /**
@@ -207,25 +215,27 @@ export function removeOnContextDispatch<T>(signalId: keyof T, listenerId: number
  * @function firstContextDispatch
  * @returns {Promise<void>} promise of void
  */
-export function firstContextDispatch<T>(signalId: keyof T, conditionFn?: (detail: ContextSignalObject<T>['detail']) => boolean): Promise<void> {
-  let canRemoveOnDispatch = false;
+export function firstContextDispatch<T extends object>() {
+  return <K extends keyof T = keyof T>(signalId: K, conditionFn?: (detail: ContextSignalObject<T[K]>['detail']) => boolean): Promise<void> => {
+    let canRemoveOnDispatch = false;
 
-  return new Promise((resolve) => {
-    const listenerId = onContextDispatch(signalId, (detail) => {
-      if (typeof conditionFn === 'function') {
-        const result = conditionFn(detail as ContextSignalObject<T>['detail']);
-        if (result === true) {
-          canRemoveOnDispatch = true;
+    return new Promise((resolve) => {
+      const listenerId = onContextDispatch<T>()(signalId, (detail) => {
+        if (typeof conditionFn === 'function') {
+          const result = conditionFn(detail as ContextSignalObject<T[K]>['detail']);
+          if (result === true) {
+            canRemoveOnDispatch = true;
+            resolve();
+          }
+        }
+        else {
           resolve();
         }
-      }
-      else {
-        resolve();
-      }
 
-      if (canRemoveOnDispatch) {
-        removeOnContextDispatch(signalId, listenerId);
-      }
+        if (canRemoveOnDispatch) {
+          removeOnContextDispatch<T>()(signalId, listenerId);
+        }
+      });
     });
-  });
+  };
 }
