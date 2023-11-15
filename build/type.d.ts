@@ -1,4 +1,8 @@
 export type DebounceType = 'No' | 'NextCycle' | 'AnimationFrame' | 'Timeout';
+export interface ContextSignalList {
+    __dontUseMe: null;
+    [key: string]: unknown;
+}
 /**
  * Object that can be JSON.stringify.
  */
