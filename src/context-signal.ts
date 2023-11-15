@@ -173,22 +173,22 @@ export function onContextDispatch<T extends object>() {
     });
 
     _actionTarget.addEventListener(
-    signalId as string,
-    ((event: CustomEvent) => {
-      if (options.runAsLatest) {
-        setTimeout(() => {
+      signalId as string,
+      ((event: CustomEvent) => {
+        if (options.runAsLatest) {
+          setTimeout(() => {
+            listenerCallback(event);
+          }, 0);
+        }
+        else {
           listenerCallback(event);
-        }, 0);
-      }
-      else {
-        listenerCallback(event);
-      }
-    }) as EventListener,
-    {once: options.once},
+        }
+      }) as EventListener,
+      {once: options.once},
     );
 
     if (options.preserved) {
-      setTimeout(callback, 0, signal.detail);
+      setTimeout(listenerCallback, 0, signal.detail);
     }
 
     return _lastContextSignalListenerAutoId;
