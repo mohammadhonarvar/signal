@@ -187,8 +187,8 @@ export function onContextDispatch<T extends object>() {
       {once: options.once},
     );
 
-    if (options.preserved) {
-      setTimeout(listenerCallback, 0, {detail: signal.detail});
+    if (options.preserved && signal.firstDispatchedDone) {
+      setTimeout(listenerCallback, 0, signal.detail);
     }
 
     return _lastContextSignalListenerAutoId;
