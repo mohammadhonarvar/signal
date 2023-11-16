@@ -152,7 +152,7 @@ export function onContextDispatch<T extends object>() {
     logger.logMethodArgs?.('onContextDispatch', {signalId, callback, options});
 
     const signal = _getContextSignalObject<T>()(signalId);
-    if (signal.disabled || !signal.firstDispatchedDone) return _lastContextSignalListenerAutoId;
+    if (signal.disabled) return _lastContextSignalListenerAutoId;
 
     const listenerCallback = (event: CustomEvent<T[typeof signalId]>): void | Promise<void> => {
       try {
@@ -188,7 +188,7 @@ export function onContextDispatch<T extends object>() {
     );
 
     if (options.preserved) {
-      setTimeout(listenerCallback, 0, signal.detail);
+      setTimeout(listenerCallback, 0, {detail: signal.detail});
     }
 
     return _lastContextSignalListenerAutoId;
