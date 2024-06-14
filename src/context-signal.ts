@@ -26,6 +26,8 @@ const _getContextSignalObject = <T>() => <K extends keyof T = keyof T>(
     };
   }
 
+  logger.logMethodArgs?.('_getContextSignalObject', {signalId, signal});
+
   return signal;
 };
 
@@ -73,7 +75,10 @@ export const setContextSignalValue = <T extends object>() => <K extends keyof T 
  * ```
  */
 export const getContextSignalValue = <T extends object>() => <K extends keyof T = keyof T>(signalId: K): T[K] | undefined => {
-  return _getContextSignalObject<T>()(signalId).detail;
+  const value = _getContextSignalObject<T>()(signalId).detail;
+  logger.logMethodArgs?.('getContextSignalValue', {signalId, value});
+
+  return value;
 };
 
 
