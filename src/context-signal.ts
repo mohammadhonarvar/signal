@@ -26,7 +26,7 @@ const _getContextSignalObject = <T>() => <K extends keyof T = keyof T>(
     };
   }
 
-  logger.logMethodArgs?.('_getContextSignalObject', {signalId, signal});
+  logger.logMethodArgs?.('_getContextSignalObject', {signalId, signal: JSON.parse(JSON.stringify(signal))});
 
   return signal;
 };
@@ -76,7 +76,13 @@ export const setContextSignalValue = <T extends object>() => <K extends keyof T 
  */
 export const getContextSignalValue = <T extends object>() => <K extends keyof T = keyof T>(signalId: K): T[K] | undefined => {
   const value = _getContextSignalObject<T>()(signalId).detail;
-  logger.logMethodArgs?.('getContextSignalValue', {signalId, value});
+
+  let valueForLog = value;
+  if (value != null) {
+    valueForLog = JSON.parse(JSON.stringify(value));
+  }
+
+  logger.logMethodArgs?.('getContextSignalValue', {signalId, value: valueForLog});
 
   return value;
 };
@@ -124,9 +130,9 @@ export function contextDispatch<T extends object>() {
 
     // else
     signal.debounced = true;
-  options.debounce === 'AnimationFrame'
-    ? requestAnimationFrame(dispatchEvent)
-    : setTimeout(dispatchEvent, debounceTimeout);
+    options.debounce === 'AnimationFrame'
+      ? requestAnimationFrame(dispatchEvent)
+      : setTimeout(dispatchEvent, debounceTimeout);
   };
 }
 
